@@ -53,21 +53,24 @@ export default function LoginScreen() {
       const decodedToken = decodeJwt(token);
       if (!decodedToken) throw new Error('Failed to decode token');
 
-      const { username, role, hotel_id } = decodedToken;
+      const { username, role, car_rental_company_id } = decodedToken;
       if (!username || !role) throw new Error('Invalid token structure');
 
       // Store username, role, and hotel_id in AsyncStorage
       await AsyncStorage.setItem('username', username);
       await AsyncStorage.setItem('role', role);
-      if (hotel_id) await AsyncStorage.setItem('hotel_id', hotel_id);
+      if (car_rental_company_id) await AsyncStorage.setItem('car_rental_company_id', car_rental_company_id);
 
       console.log('Login successful, data stored');
 
       // Navigate based on role
-      if (role === 'Hotel Management Staff') {
+      if (role === 'Car Rental Staff') {
         // Pass both username and hotel_id in the URL
-        console.log(hotel_id);
-        router.push(`/Hotel Admin?username=${encodeURIComponent(username)}&hotel_id=${encodeURIComponent(hotel_id)}`);
+        console.log(car_rental_company_id);
+        router.push({
+          pathname: '/CarRentalInfo', // Replace with a valid route
+          params: { car_rental_company_id: car_rental_company_id },
+        });
       } else {
         throw new Error('Invalid Credentials');
       }

@@ -1,191 +1,151 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import axios from 'axios';
-import io from 'socket.io-client';
+import Icon from 'react-native-vector-icons/Ionicons';
 
-let socket;
 interface Reservation {
-    _id: string;
-    customer_name: string;
-    CNIC: string;
-    phone_number: string;
-    email: string;
-    reservation_date: { from: string; to: string };
-    reservationStatus: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
-    roomDetails: {
-        room_type: string;
-        room_number: string;
-        rent: number;
-        bed_size: string;
-    }
+  _id: string;
+  user: string;
+  car: {
+    model: string;
+    registration_number: string;
+  };
+  start_date: string;
+  end_date: string;
+  total_cost: number;
+  status: string;
 }
 
-interface ReservationRequestsProps {
-    status: string | string[];
-    hotel_id: string;
-}
+const ReservationRequests = ({ status, companyId }: { status: string | string[], companyId: string }) => {
+  const [reservations, setReservations] = useState<Reservation[]>([]);
 
-export default function ReservationRequests({ status, hotel_id }: ReservationRequestsProps) {
-    const [reservations, setReservations] = useState<Reservation[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => {
-        socket = io('http://10.130.114.185:3000');
-
-        socket.on('connect', () => console.log('Connected to Socket.IO server'));
-        socket.on('reservation-created', (data: { placeID: string, reservationDetails: any }) => {
-            console.log("Received reservation-created event:", data);
-
-            if (data.placeID === hotel_id && data.reservationDetails?._id) {
-                setReservations((prevReservations) =>
-                    prevReservations.some((res) => res._id === data.reservationDetails._id) ? prevReservations
-                        : [...prevReservations, data.reservationDetails]
-                );
-            }
-        });
-
-        socket.on('disconnect', () => console.log('Disconnected from Socket.IO server'));
-
-        const fetchReservations = async () => {
-            try {
-                const statusQuery = Array.isArray(status) ? status.join(",") : status;
-                const response = await axios.get(`http://10.130.114.185:3000/GetReservations?status=${statusQuery}&hotel_id=${hotel_id}`);
-                setReservations(response.data);
-                console.log("fetched reservations:", response.data);
-            } catch (error) {
-                console.error("Error fetching reservations:", error);
-                setError("Failed to fetch reservations.");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchReservations();
-    }, [status, hotel_id]);
-
-    // console.log("Reservations are:", reservations);
-
-    const updateReservationStatus = async (id: string, newStatus: "CONFIRMED" | "CANCELLED") => {
-        try {
-            await axios.put(`http://10.130.114.185:3000/UpdateReservationsStatus/${id}/updateStatus`, { status: newStatus });
-            setReservations(reservations.map(res => res._id === id ? { ...res, reservationStatus: newStatus } : res));
-        } catch (error) {
-            console.error("Error updating reservation:", error);
-        }
+  useEffect(() => {
+    const fetchReservations = async () => {
+      try {
+        const response = await axios.get(
+          `http://10.130.114.185:3000/car-rental/reservations`,
+          { params: { companyId, status } }
+        );
+        setReservations(response.data);
+      } catch (error) {
+        Alert.alert('Error', 'Failed to fetch reservations');
+      }
     };
+    fetchReservations();
+  }, [companyId, status]);
 
-
-    if (loading) {
-        return (
-            <View style={styles.centeredContainer}>
-                <ActivityIndicator size="large" color="blue" />
-            </View>
-        );
+  const updateReservationStatus = async (id: string, newStatus: string) => {
+    try {
+      await axios.patch(
+        `http://10.130.114.185:3000/car-rental/reservations/${id}`,
+        { status: newStatus }
+      );
+      setReservations(reservations.filter(r => r._id !== id));
+      Alert.alert('Success', `Reservation ${newStatus.toLowerCase()}`);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update reservation');
     }
+  };
 
-    if (error) {
-        return (
-            <View style={styles.centeredContainer}>
-                <Text style={styles.errorText}>{error}</Text>
-            </View>
-        );
-    }
-
-    return (
-        <View style={styles.container}>
-            <Text style={styles.headerText}>
-                {status === "PENDING" && "Reservation Requests"}
-                {status === "CONFIRMED" && "Ongoing Reservations"}
-                {(Array.isArray(status) ? status.some(s => ["CANCELLED", "COMPLETED"].includes(s)) : ["CANCELLED", "COMPLETED"].includes(status)) && "Reservation History"}
+  return (
+    <ScrollView style={styles.container}>
+      {reservations.map(reservation => (
+        <View key={reservation._id} style={styles.reservationCard}>
+          <Text style={styles.carModel}>{reservation.car.model}</Text>
+          <Text>Registration: {reservation.car.registration_number}</Text>
+          <Text>User: {reservation.user}</Text>
+          <Text>Dates: {new Date(reservation.start_date).toLocaleDateString()} - 
+                {new Date(reservation.end_date).toLocaleDateString()}</Text>
+          <Text>Total: ${reservation.total_cost}</Text>
+          
+          <View style={styles.statusContainer}>
+            <Text style={[
+              styles.statusText,
+              reservation.status === 'PENDING' && styles.pending,
+              reservation.status === 'CONFIRMED' && styles.confirmed
+            ]}>
+              {reservation.status}
             </Text>
+          </View>
 
-            <FlatList
-                data={reservations}
-                keyExtractor={(item) => item._id}
-                numColumns={2}
-                columnWrapperStyle={styles.row}
-                renderItem={({ item }) => (
-                    <View style={styles.card}>
-                        <Text style={styles.text}><Text style={styles.bold}>Guest:</Text> {item.customer_name}</Text>
-                        <Text style={styles.text}><Text style={styles.bold}>CNIC:</Text> {item.CNIC}</Text>
-                        <Text style={styles.text}><Text style={styles.bold}>Phone:</Text> {item.phone_number}</Text>
-                        <Text style={styles.text}><Text style={styles.bold}>Email:</Text> {item.email}</Text>
-                        <Text style={styles.text}><Text style={styles.bold}>Check-in:</Text> {new Date(item.reservation_date.from).toDateString()}</Text>
-                        <Text style={styles.text}><Text style={styles.bold}>Check-out:</Text> {new Date(item.reservation_date.to).toDateString()}</Text>
-                        <Text style={styles.text}><Text style={styles.bold}>Room Type:</Text> {item.roomDetails.room_type}</Text>
-                        <Text style={styles.text}><Text style={styles.bold}>Room Number:</Text> {item.roomDetails.room_number}</Text>
-                        <Text style={styles.text}><Text style={styles.bold}>Rent:</Text> {item.roomDetails.rent}</Text>
-                        {/* Status */}
-                        <View style={[styles.statusContainer, { borderColor: getStatusColor(item.reservationStatus) }]}>
-                            <Text style={[styles.statusText, { color: getStatusColor(item.reservationStatus) }]}>
-                                {item.reservationStatus}
-                            </Text>
-                        </View>
-
-                        {status === "PENDING" && (
-                            <View style={styles.buttonContainer}>
-                                <TouchableOpacity style={[styles.button, styles.acceptButton]} onPress={() => updateReservationStatus(item._id, "CONFIRMED")}>
-                                    <Text style={styles.buttonText}>Accept</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity style={[styles.button, styles.rejectButton]} onPress={() => updateReservationStatus(item._id, "CANCELLED")}>
-                                    <Text style={styles.buttonText}>Cancel</Text>
-                                </TouchableOpacity>
-                            </View>
-                        )}
-                    </View>
-                )}
-            />
+          {reservation.status === 'PENDING' && (
+            <View style={styles.actionsContainer}>
+              <TouchableOpacity 
+                style={[styles.actionButton, styles.confirmButton]}
+                onPress={() => updateReservationStatus(reservation._id, 'CONFIRMED')}
+              >
+                <Icon name="checkmark-circle" size={20} color="white" />
+                <Text style={styles.buttonText}>Confirm</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.actionButton, styles.cancelButton]}
+                onPress={() => updateReservationStatus(reservation._id, 'CANCELLED')}
+              >
+                <Icon name="close-circle" size={20} color="white" />
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
-    );
-}
-
-// Function to set color based on reservation status
-const getStatusColor = (status: string) => {
-    switch (status) {
-        case "PENDING": return "#FFA500"; // Orange
-        case "CONFIRMED": return "#008000"; // Green
-        case "CANCELLED": return "#FF0000"; // Red
-        case "COMPLETED": return "#0000FF"; // Blue
-        default: return "#808080"; // Gray
-    }
+      ))}
+    </ScrollView>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20, backgroundColor: "#f4f7fc" },
-    centeredContainer: { flex: 1, justifyContent: "center", alignItems: "center", paddingTop: '25%' },
-    headerText: { fontSize: 22, fontWeight: "bold", marginBottom: 15, textAlign: "center" },
-
-    row: { justifyContent: "space-between" },
-    card: {
-        flex: 1,
-        backgroundColor: "#fff",
-        padding: 15,
-        borderRadius: 8,
-        marginBottom: 15,
-        elevation: 3,
-        marginHorizontal: 5,
-    },
-
-    text: { fontSize: 16, marginBottom: 5 },
-    bold: { fontWeight: "bold" },
-
-    statusContainer: {
-        borderWidth: 2,
-        borderRadius: 5,
-        paddingVertical: 5,
-        paddingHorizontal: 10,
-        marginTop: 5,
-        alignSelf: "flex-start",
-    },
-    statusText: { fontWeight: "bold" },
-
-    buttonContainer: { flexDirection: "row", justifyContent: "space-between", marginTop: 10 },
-    button: { flex: 1, padding: 10, borderRadius: 5, alignItems: "center", marginHorizontal: 5 },
-    acceptButton: { backgroundColor: "green" },
-    rejectButton: { backgroundColor: "red" },
-    buttonText: { color: "white", fontWeight: "bold" },
-
-    errorText: { fontSize: 18, color: "red", textAlign: "center" },
+  container: { padding: 20 },
+  reservationCard: {
+    backgroundColor: 'white',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 15,
+    elevation: 3,
+  },
+  carModel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  statusContainer: {
+    marginTop: 10,
+  },
+  statusText: {
+    padding: 5,
+    borderRadius: 5,
+    alignSelf: 'flex-start',
+  },
+  pending: {
+    backgroundColor: '#ffeeba',
+    color: '#856404',
+  },
+  confirmed: {
+    backgroundColor: '#c3e6cb',
+    color: '#155724',
+  },
+  actionsContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 15,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+  },
+  confirmButton: {
+    backgroundColor: '#28a745',
+  },
+  cancelButton: {
+    backgroundColor: '#dc3545',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
 });
 
+export default ReservationRequests;
