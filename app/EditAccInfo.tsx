@@ -33,7 +33,7 @@ const EditAccount = ({ hotel_id }: { hotel_id: string }) => {
 
      const fetchHotel = async () => {
             try {
-                const response = await axios.get(`http://10.130.114.185:3000/hotels/${hotel_id}`);
+                const response = await axios.get(`http://34.226.13.20:3000:3000/hotels/${hotel_id}`);
                 setHotel(response.data.hotel);
                 setUpdatedHotel(response.data.hotel);
                 setLoading(false);
@@ -56,7 +56,7 @@ const EditAccount = ({ hotel_id }: { hotel_id: string }) => {
                 room_number: Number(newRoom.room_number),
                 available: newRoom.available.toLowerCase() === 'true',
             };
-            await axios.post('http://10.130.114.185:3000/room', roomPayload);
+            await axios.post('http://34.226.13.20:3000:3000/room', roomPayload);
             alert('Room added successfully!');
             setAddRoomModalVisible(false);
             setNewRoom({ room_type: '', room_number: '', rent: '', available: '', bed_size: '' });
@@ -69,7 +69,7 @@ const EditAccount = ({ hotel_id }: { hotel_id: string }) => {
 
         const handleUpdate = async () => {
             try {
-                const response = await axios.put(`http://10.130.114.185:3000/edithotel/${hotel_id}`, updatedHotel);
+                const response = await axios.put(`http://34.226.13.20:3000:3000/edithotel/${hotel_id}`, updatedHotel);
                 console.log('Hotel updated successfully', response.data);
                 setEditModalVisible(false);
                 fetchHotel();

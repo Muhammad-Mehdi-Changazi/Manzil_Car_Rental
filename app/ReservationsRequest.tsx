@@ -23,7 +23,7 @@ const ReservationRequests = ({ status, companyId }: { status: string | string[],
     const fetchReservations = async () => {
       try {
         const response = await axios.get(
-          `http://10.130.114.185:3000/car-rental/reservations`,
+          `http://34.226.13.20:3000:3000/car-rental/reservations`,
           { params: { companyId, status } }
         );
         setReservations(response.data);
@@ -37,7 +37,7 @@ const ReservationRequests = ({ status, companyId }: { status: string | string[],
   const updateReservationStatus = async (id: string, newStatus: string) => {
     try {
       await axios.patch(
-        `http://10.130.114.185:3000/car-rental/reservations/${id}`,
+        `http://34.226.13.20:3000:3000/car-rental/reservations/${id}`,
         { status: newStatus }
       );
       setReservations(reservations.filter(r => r._id !== id));
