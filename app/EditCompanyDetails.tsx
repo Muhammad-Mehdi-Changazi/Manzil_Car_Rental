@@ -44,7 +44,7 @@ const EditCompanyDetails: React.FC<Props> = ({ car_rental_company_id }) => {
 
   const fetchCompanyDetails = async () => {
     try {
-      const response = await axios.get(`http://10.130.114.185:3000/companies/${car_rental_company_id}`);
+      const response = await axios.get(`http://34.226.13.20:3000/companies/${car_rental_company_id}`);
       setCompany(response.data);
     } catch (error) {
       console.error('Failed to fetch company details:', error);
@@ -58,7 +58,7 @@ const EditCompanyDetails: React.FC<Props> = ({ car_rental_company_id }) => {
     if (!company) return;
     setSaving(true);
     try {
-      await axios.put(`http://10.130.114.185:3000/update-company/${car_rental_company_id}`, company);
+      await axios.put(`http://34.226.13.20:3000/update-company/${car_rental_company_id}`, company);
       Alert.alert('Success', 'Company details updated.');
     } catch (error) {
       console.error('Failed to update company:', error);

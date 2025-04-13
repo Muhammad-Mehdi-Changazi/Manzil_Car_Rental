@@ -83,7 +83,7 @@ function CarRental() {
             useCallback(() => {
                 const fetchCompanyDetails = async () => {
                 try {
-                    const response = await axios.get(`http://10.130.114.185:3000/companies/${car_rental_company_id}`);
+                    const response = await axios.get(`http://34.226.13.20:3000/companies/${car_rental_company_id}`);
                     setCompany(response.data);
 
                     const availableCarsCount: number = (response.data.cars as Car[]).filter((car: Car) => car.available).length;
