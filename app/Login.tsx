@@ -39,7 +39,7 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     try {
       // Make a POST request to the backend login endpoint
-      const response = await axios.post('http://34.226.13.20:3000/login', {
+      const response = await axios.post('http://10.130.114.185:3000/login', {
         email,
         password,
       });

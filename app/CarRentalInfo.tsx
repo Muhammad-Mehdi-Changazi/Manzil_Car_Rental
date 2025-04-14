@@ -83,7 +83,7 @@ function CarRental() {
             useCallback(() => {
                 const fetchCompanyDetails = async () => {
                 try {
-                    const response = await axios.get(`http://34.226.13.20:3000/companies/${car_rental_company_id}`);
+                    const response = await axios.get(`http://10.130.114.185:3000/companies/${car_rental_company_id}`);
                     setCompany(response.data);
 
                     const availableCarsCount: number = (response.data.cars as Car[]).filter((car: Car) => car.available).length;
@@ -228,10 +228,28 @@ function CarRental() {
             case "Staff Info":
                  
             case "Current Bookings":
+                return (
+                <ReservationRequests
+                    status={["CONFIRMED"]}
+                    companyId={car_rental_company_id}
+                />
+                );
 
             case "Request History":
-               
+                return (
+                <ReservationRequests
+                    status={["CANCELLED", "CONFIRMED"]}
+                    companyId={car_rental_company_id}
+                />
+                );
+
             case "Pending Requests":
+                return (
+                <ReservationRequests
+                    status={["PENDING"]}
+                    companyId={car_rental_company_id}
+                />
+                );
 
             case "Edit Company Details":
                  return <EditCompanyDetails car_rental_company_id={car_rental_company_id} />;

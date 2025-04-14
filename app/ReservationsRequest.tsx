@@ -5,16 +5,23 @@ import Icon from 'react-native-vector-icons/Ionicons';
 
 interface Reservation {
   _id: string;
-  user: string;
-  car: {
-    model: string;
-    registration_number: string;
+  cnic: string;
+  contactNumber: string;
+  fromDate: string;
+  endDate: string;
+  carModel: string;
+  registrationNumber: string;
+  paymentMethod: string;
+  reservationStatus: string;
+  rentCarCompany: string;
+  user: {
+    _id: string;
+    email: string;
   };
-  start_date: string;
-  end_date: string;
-  total_cost: number;
-  status: string;
+  createdAt: string;
+  updatedAt: string;
 }
+
 
 const ReservationRequests = ({ status, companyId }: { status: string | string[], companyId: string }) => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -23,10 +30,11 @@ const ReservationRequests = ({ status, companyId }: { status: string | string[],
     const fetchReservations = async () => {
       try {
         const response = await axios.get(
-          `http://34.226.13.20:3000/car-rental/reservations`,
+          `http://10.130.114.185:3000/car-rental/reservations`,
           { params: { companyId, status } }
         );
         setReservations(response.data);
+        console.log(response.data);
       } catch (error) {
         Alert.alert('Error', 'Failed to fetch reservations');
       }
@@ -36,8 +44,8 @@ const ReservationRequests = ({ status, companyId }: { status: string | string[],
 
   const updateReservationStatus = async (id: string, newStatus: string) => {
     try {
-      await axios.patch(
-        `http://34.226.13.20:3000/car-rental/reservations/${id}`,
+      await axios.put(
+        `http://10.130.114.185:3000/update-reservations/${id}`,
         { status: newStatus }
       );
       setReservations(reservations.filter(r => r._id !== id));
@@ -51,34 +59,39 @@ const ReservationRequests = ({ status, companyId }: { status: string | string[],
     <ScrollView style={styles.container}>
       {reservations.map(reservation => (
         <View key={reservation._id} style={styles.reservationCard}>
-          <Text style={styles.carModel}>{reservation.car.model}</Text>
-          <Text>Registration: {reservation.car.registration_number}</Text>
-          <Text>User: {reservation.user}</Text>
-          <Text>Dates: {new Date(reservation.start_date).toLocaleDateString()} - 
-                {new Date(reservation.end_date).toLocaleDateString()}</Text>
-          <Text>Total: ${reservation.total_cost}</Text>
-          
+          <Text style={styles.carModel}>{reservation.carModel}</Text>
+          <Text>Registration Number: {reservation.registrationNumber}</Text>
+          <Text>CNIC: {reservation.cnic}</Text>
+          <Text>Contact Number: {reservation.contactNumber}</Text>
+          <Text>User Email: {reservation.user?.email}</Text>
+          <Text>Payment Method: {reservation.paymentMethod}</Text>
+          <Text>From: {new Date(reservation.fromDate).toLocaleDateString()}</Text>
+          <Text>To: {new Date(reservation.endDate).toLocaleDateString()}</Text>
+          <Text>Created At: {new Date(reservation.createdAt).toLocaleDateString()}</Text>
+
           <View style={styles.statusContainer}>
-            <Text style={[
-              styles.statusText,
-              reservation.status === 'PENDING' && styles.pending,
-              reservation.status === 'CONFIRMED' && styles.confirmed
-            ]}>
-              {reservation.status}
+            <Text
+              style={[
+                styles.statusText,
+                reservation.reservationStatus === 'PENDING' && styles.pending,
+                reservation.reservationStatus === 'CONFIRMED' && styles.confirmed,
+              ]}
+            >
+              {reservation.reservationStatus}
             </Text>
           </View>
 
-          {reservation.status === 'PENDING' && (
+          {reservation.reservationStatus === 'PENDING' && (
             <View style={styles.actionsContainer}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.actionButton, styles.confirmButton]}
                 onPress={() => updateReservationStatus(reservation._id, 'CONFIRMED')}
               >
                 <Icon name="checkmark-circle" size={20} color="white" />
                 <Text style={styles.buttonText}>Confirm</Text>
               </TouchableOpacity>
-              
-              <TouchableOpacity 
+
+              <TouchableOpacity
                 style={[styles.actionButton, styles.cancelButton]}
                 onPress={() => updateReservationStatus(reservation._id, 'CANCELLED')}
               >
@@ -89,6 +102,7 @@ const ReservationRequests = ({ status, companyId }: { status: string | string[],
           )}
         </View>
       ))}
+
     </ScrollView>
   );
 };

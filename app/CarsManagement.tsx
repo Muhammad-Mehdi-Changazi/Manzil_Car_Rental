@@ -33,7 +33,7 @@ const CarManagementScreen: React.FC<Props> = ({ car_rental_company_id }) => {
 
   const fetchCompanyData = async () => {
     try {
-      const response = await axios.get(`http://34.226.13.20:3000/companies/${car_rental_company_id}`);
+      const response = await axios.get(`http://10.130.114.185:3000/companies/${car_rental_company_id}`);
       setCompany(response.data);
     } catch (error) {
       console.error("Error fetching company data:", error);
@@ -45,13 +45,13 @@ const CarManagementScreen: React.FC<Props> = ({ car_rental_company_id }) => {
       if (editCarIndex !== null) {
         const updatedCar = form;
         console.log("Updating car:", updatedCar);
-        await axios.put(`http://34.226.13.20:3000/api/cars/${company.cars[editCarIndex].registration_number}`, updatedCar);
+        await axios.put(`http://10.130.114.185:3000/api/cars/${company.cars[editCarIndex].registration_number}`, updatedCar);
         const updatedCars = [...company.cars];
         updatedCars[editCarIndex] = updatedCar;
         setCompany({ ...company, cars: updatedCars });
       } else {
         console.log("Adding new car:", form);
-        await axios.post(`http://34.226.13.20:3000/api/cars`, { ...form, companyId: car_rental_company_id });
+        await axios.post(`http://10.130.114.185:3000/api/cars`, { ...form, companyId: car_rental_company_id });
         setCompany({ ...company, cars: [...company.cars, form] });
       }
 
