@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/Ionicons';
+import io from 'socket.io-client';
+
+let socket;
 
 interface Reservation {
   _id: string;
@@ -25,8 +28,7 @@ interface Reservation {
 const ReservationRequests = ({ status, companyId }: { status: string | string[], companyId: string }) => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
 
-  useEffect(() => {
-    const fetchReservations = async () => {
+  const fetchReservations = async () => {
       try {
         const response = await axios.get(
           `http://34.226.13.20:3000/car-rental/reservations`,
@@ -38,6 +40,29 @@ const ReservationRequests = ({ status, companyId }: { status: string | string[],
         Alert.alert('Error', 'Failed to fetch reservations');
       }
     };
+
+     useEffect(() => {
+  
+              socket = io('http://34.226.13.20:3000');
+              socket.on('connect', () => console.log('Connection to Socket.IO server'));
+  
+  
+              socket.on('newReservation', async (reservation: Reservation) => {
+                  console.log('Received new reservation:', reservation);
+  
+                  if (reservation.rentCarCompany === companyId) {
+                      fetchReservations();  }
+                  
+                  });
+          return () => {
+              socket.disconnect();
+          };
+  
+      }, [companyId]);
+
+
+  useEffect(() => {
+    
     fetchReservations();
   }, [companyId, status]);
 
