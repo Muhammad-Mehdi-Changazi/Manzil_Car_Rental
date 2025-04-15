@@ -22,7 +22,6 @@ interface Reservation {
   updatedAt: string;
 }
 
-
 const ReservationRequests = ({ status, companyId }: { status: string | string[], companyId: string }) => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
 
@@ -30,7 +29,7 @@ const ReservationRequests = ({ status, companyId }: { status: string | string[],
     const fetchReservations = async () => {
       try {
         const response = await axios.get(
-          `http://10.130.114.185:3000/car-rental/reservations`,
+          `http://34.226.13.20:3000/car-rental/reservations`,
           { params: { companyId, status } }
         );
         setReservations(response.data);
@@ -45,7 +44,7 @@ const ReservationRequests = ({ status, companyId }: { status: string | string[],
   const updateReservationStatus = async (id: string, newStatus: string) => {
     try {
       await axios.put(
-        `http://10.130.114.185:3000/update-reservations/${id}`,
+        `http://34.226.13.20:3000/update-reservations/${id}`,
         { status: newStatus }
       );
       setReservations(reservations.filter(r => r._id !== id));
@@ -57,69 +56,113 @@ const ReservationRequests = ({ status, companyId }: { status: string | string[],
 
   return (
     <ScrollView style={styles.container}>
-      {reservations.map(reservation => (
-        <View key={reservation._id} style={styles.reservationCard}>
-          <Text style={styles.carModel}>{reservation.carModel}</Text>
-          <Text>Registration Number: {reservation.registrationNumber}</Text>
-          <Text>CNIC: {reservation.cnic}</Text>
-          <Text>Contact Number: {reservation.contactNumber}</Text>
-          <Text>User Email: {reservation.user?.email}</Text>
-          <Text>Payment Method: {reservation.paymentMethod}</Text>
-          <Text>From: {new Date(reservation.fromDate).toLocaleDateString()}</Text>
-          <Text>To: {new Date(reservation.endDate).toLocaleDateString()}</Text>
-          <Text>Created At: {new Date(reservation.createdAt).toLocaleDateString()}</Text>
-
-          <View style={styles.statusContainer}>
-            <Text
-              style={[
-                styles.statusText,
-                reservation.reservationStatus === 'PENDING' && styles.pending,
-                reservation.reservationStatus === 'CONFIRMED' && styles.confirmed,
-              ]}
-            >
-              {reservation.reservationStatus}
+      <View style={styles.cardsWrapper}>
+        {reservations.map(reservation => (
+          <View key={reservation._id} style={styles.reservationCard}>
+            <Text style={styles.carModel}>{reservation.carModel}</Text>
+            <Text style={styles.detailText}>
+              <Text style={styles.label}>Registration Number: </Text>
+              <Text style={styles.value}>{reservation.registrationNumber}</Text>
             </Text>
-          </View>
+            <Text style={styles.detailText}>
+              <Text style={styles.label}>CNIC: </Text>
+              <Text style={styles.value}>{reservation.cnic}</Text>
+            </Text>
+            <Text style={styles.detailText}>
+              <Text style={styles.label}>Contact Number: </Text>
+              <Text style={styles.value}>{reservation.contactNumber}</Text>
+            </Text>
+            <Text style={styles.detailText}>
+              <Text style={styles.label}>User Email: </Text>
+              <Text style={styles.value}>{reservation.user?.email}</Text>
+            </Text>
+            <Text style={styles.detailText}>
+              <Text style={styles.label}>Payment Method: </Text>
+              <Text style={styles.value}>{reservation.paymentMethod}</Text>
+            </Text>
+            <Text style={styles.detailText}>
+              <Text style={styles.label}>From: </Text>
+              <Text style={styles.value}>{new Date(reservation.fromDate).toLocaleDateString()}</Text>
+            </Text>
+            <Text style={styles.detailText}>
+              <Text style={styles.label}>To: </Text>
+              <Text style={styles.value}>{new Date(reservation.endDate).toLocaleDateString()}</Text>
+            </Text>
+            <Text style={styles.detailText}>
+              <Text style={styles.label}>Created At: </Text>
+              <Text style={styles.value}>{new Date(reservation.createdAt).toLocaleDateString()}</Text>
+            </Text>
 
-          {reservation.reservationStatus === 'PENDING' && (
-            <View style={styles.actionsContainer}>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.confirmButton]}
-                onPress={() => updateReservationStatus(reservation._id, 'CONFIRMED')}
+            <View style={styles.statusContainer}>
+              <Text
+                style={[
+                  styles.statusText,
+                  reservation.reservationStatus === 'PENDING' && styles.pending,
+                  reservation.reservationStatus === 'CONFIRMED' && styles.confirmed,
+                  reservation.reservationStatus === 'CANCELLED' && styles.cancelled,
+                ]}
               >
-                <Icon name="checkmark-circle" size={20} color="white" />
-                <Text style={styles.buttonText}>Confirm</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.actionButton, styles.cancelButton]}
-                onPress={() => updateReservationStatus(reservation._id, 'CANCELLED')}
-              >
-                <Icon name="close-circle" size={20} color="white" />
-                <Text style={styles.buttonText}>Cancel</Text>
-              </TouchableOpacity>
+                {reservation.reservationStatus}
+              </Text>
             </View>
-          )}
-        </View>
-      ))}
 
+            {reservation.reservationStatus === 'PENDING' && (
+              <View style={styles.actionsContainer}>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.confirmButton]}
+                  onPress={() => updateReservationStatus(reservation._id, 'CONFIRMED')}
+                >
+                  <Icon name="checkmark-circle" size={20} color="white" />
+                  <Text style={styles.buttonText}>Confirm</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.cancelButton]}
+                  onPress={() => updateReservationStatus(reservation._id, 'CANCELLED')}
+                >
+                  <Icon name="close-circle" size={20} color="white" />
+                  <Text style={styles.buttonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        ))}
+      </View>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { padding: 20 },
+  container: { padding: 10 },
+  cardsWrapper: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
   reservationCard: {
     backgroundColor: 'white',
     padding: 15,
     borderRadius: 10,
     marginBottom: 15,
     elevation: 3,
+    width: '48%',
   },
   carModel: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 5,
+    marginBottom: 8,
+    color: '#176FF2',
+  },
+  detailText: {
+    marginBottom: 6,
+    lineHeight: 20,
+  },
+  label: {
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  value: {
+    color: '#666',
   },
   statusContainer: {
     marginTop: 10,
@@ -128,6 +171,7 @@ const styles = StyleSheet.create({
     padding: 5,
     borderRadius: 5,
     alignSelf: 'flex-start',
+    fontWeight: 'bold',
   },
   pending: {
     backgroundColor: '#ffeeba',
@@ -136,6 +180,10 @@ const styles = StyleSheet.create({
   confirmed: {
     backgroundColor: '#c3e6cb',
     color: '#155724',
+  },
+  cancelled: {
+    backgroundColor: '#f8d7da',
+    color: '#721c24',
   },
   actionsContainer: {
     flexDirection: 'row',
@@ -147,7 +195,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 5,
     paddingVertical: 8,
-    paddingHorizontal: 15,
+    paddingHorizontal: 12,
     borderRadius: 5,
   },
   confirmButton: {

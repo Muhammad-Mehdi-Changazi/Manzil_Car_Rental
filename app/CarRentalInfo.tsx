@@ -45,11 +45,31 @@ export interface CarRentalCompany {
 }
 
 
+interface Reservation {
+  _id: string;
+  cnic: string;
+  contactNumber: string;
+  fromDate: string;
+  endDate: string;
+  carModel: string;
+  registrationNumber: string;
+  paymentMethod: string;
+  reservationStatus: string;
+  rentCarCompany: string;
+  user: {
+    _id: string;
+    email: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+
 let socket;
 
 function CarRental() {
     const {car_rental_company_id } = useLocalSearchParams<{car_rental_company_id: string }>();
-    const [reservations, setReservations] = useState<any[]>([]);
+    const [reservations, setReservations] = useState<Reservation[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [activeScreen, setActiveScreen] = useState<string>("Company Details");
@@ -62,7 +82,6 @@ function CarRental() {
     const [currentBookings, setCurrentBookings] = useState<number>(0);
     const [pendingRequests, setPendingRequests] = useState<number>(0);
     const [bookingHistory, setBookingHistory] = useState<number>(0);
-    const [modalVisible, setModalVisible] = useState(false); // For controlling modal visibility
     const [alarmSound, setAlarmSound] = useState<Audio.Sound | null>(null);
     const [isAlarmPlaying, setIsAlarmPlaying] = useState(false);
     const alarmTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -77,17 +96,51 @@ function CarRental() {
         labels: Object.keys(carTypes),
         datasets: [{ data: Object.values(carTypes) }],
         };
+    // Socket connection
+    useEffect(() => {
+
+            socket = io('http://34.226.13.20:3000');
+            socket.on('connect', () => console.log('Connection to Socket.IO server'));
+
+
+            socket.on('newReservation', async (reservation: Reservation) => {
+                console.log('Received new reservation:', reservation);
+
+                if (reservation.rentCarCompany === car_rental_company_id) {
+
+                    // Only play alarm if not muted
+                    if (!isAlarmPlaying && !isAlarmMuted) {
+                        const { sound } = await Audio.Sound.createAsync(
+                            require('./../assets/alarm.mp3')
+                        );
+                        setAlarmSound(sound);
+                        setIsAlarmPlaying(true);
+                        await sound.playAsync();
+
+                        // Stop alarm after 10 seconds
+                        alarmTimeoutRef.current = setTimeout(async () => {
+                            await sound.stopAsync();
+                            setIsAlarmPlaying(false);
+                        }, 10000);
+                    }
+                }
+            });
+
+        return () => {
+            socket.disconnect();
+        };
+
+    }, [car_rental_company_id]);
+
     
 
         useFocusEffect(
             useCallback(() => {
                 const fetchCompanyDetails = async () => {
                 try {
-                    const response = await axios.get(`http://10.130.114.185:3000/companies/${car_rental_company_id}`);
+                    const response = await axios.get(`http://34.226.13.20:3000/companies/${car_rental_company_id}`);
                     setCompany(response.data);
 
-                    const availableCarsCount: number = (response.data.cars as Car[]).filter((car: Car) => car.available).length;
-                    // use availableCarsCount here or set in state if needed
                 } catch (err) {
                     console.error(err);
                     setError('Failed to load company details.');
@@ -101,7 +154,7 @@ function CarRental() {
             );
 
  
-    console.log("Object is :", company);
+    // console.log("Object is :", company);
 
     if (loading) {
         return (
