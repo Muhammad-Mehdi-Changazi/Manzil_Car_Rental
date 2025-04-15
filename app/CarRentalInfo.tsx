@@ -207,10 +207,10 @@ function CarRental() {
                         {company?.total_cars}
                         </Text>
 
-                        <Text style={{ marginBottom: 6 }}>
+                        {/* <Text style={{ marginBottom: 6 }}>
                         <Text style={{ fontWeight: 'bold' }}>Currently Available Cars: </Text>
                         {availableCarsCount}
-                        </Text>
+                        </Text> */}
 
                         <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 10, marginTop: 20 }}>
                             Fleet Overview by Type
@@ -251,22 +251,22 @@ function CarRental() {
 
                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 30 }}>
                     {/* Current Bookings */}
-                    <View style={styles.statCard}>
+                    {/* <View style={styles.statCard}>
                         <Text style={styles.statTitle}>Current Bookings</Text>
                         <Text style={styles.statCount}>{currentBookings}</Text>
-                    </View>
+                    </View> */}
 
                     {/* Booking History */}
-                    <View style={styles.statCard}>
+                    {/* <View style={styles.statCard}>
                         <Text style={styles.statTitle}>History Data</Text>
                         <Text style={styles.statCount}>{bookingHistory}</Text>
-                    </View>
+                    </View> */}
 
                     {/* Pending Requests */}
-                    <View style={styles.statCard}>
+                    {/* <View style={styles.statCard}>
                         <Text style={styles.statTitle}>Pending Rent Requests</Text>
                         <Text style={styles.statCount}>{pendingRequests}</Text>
-                    </View>
+                    </View> */}
                     </View>
 
 
